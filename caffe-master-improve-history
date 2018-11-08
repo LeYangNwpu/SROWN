@@ -1,0 +1,25 @@
+Improve histiry
+
+0103-caffe-TVS-master：
+旧版caffe下配置好Interp和LinearSum层，并加入了带dilation参数的convolution
+然而caffe无法正常的train。读入数据时有问题
+
+0103-caffe-master
+配置好Interp层和LinearSum层，且Convolution带有dilation参数
+
+0113-caffe-master
+加入CRFasRNN层
+注意：原始的CRFasRNN程序在编译时，含有一个warning，目前未解决
+
+0117-caffe-master
+重写LinearSumLayer，实现对同一视频帧中背景的建模
+
+0218-caffe-master
+投稿ICCV时使用的caffe
+
+0222-caffe-master
+实现了前后帧之间的光流投影约束saliency map之间的一致性
+
+0413-caffe-master
+对光流投影层传递参数，用两个文件分别实现前向、后向投影
+

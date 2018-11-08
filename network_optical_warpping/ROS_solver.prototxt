@@ -1,0 +1,15 @@
+net: "/disk2/yangle/code/opProjTrain/ROS_train_val.prototxt"
+#test_iter: 3000
+test_iter: 1
+test_interval: 27000
+base_lr: 0.01
+lr_policy: "step"
+gamma: 0.6
+stepsize:54000
+display: 1
+max_iter: 810000
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 27000
+snapshot_prefix: "/disk2/yangle/result/tryOp/tryOp"
+solver_mode: GPU

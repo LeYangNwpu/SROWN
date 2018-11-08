@@ -1,0 +1,540 @@
+name: "tri_TVS"
+layer {  name: "img"  type: "TripletImageData"  top: "img"  top:"labelImage"  include {  phase: TRAIN }
+  transform_param { mean_value: 115.269  mean_value: 122.346  mean_value: 122.819}
+  image_data_param {  source: "/disk2/yangle/dataset/triDataset/trainList.tri"  
+    batch_size: 4
+    root_folder: "/disk2/yangle/dataset/triDataset/augTrainImg/" } }
+layer { name:"labelSilence"  type:"Silence"  bottom:"labelImage"  include {  phase: TRAIN } }
+
+layer {  name: "mask"  type: "TripletImageData"  top: "mask"  top:"labelMask"  include {  phase: TRAIN }
+  transform_param { scale: 0.00392156862745098 }
+  image_data_param {  source: "/disk2/yangle/dataset/triDataset/trainList.tri"
+    is_color:0   batch_size: 4
+    root_folder: "/disk2/yangle/dataset/triDataset/augTrainMask/" } }
+
+layer {  name: "img"  type: "TripletImageData"  top: "img"  top:"labelImage"  include {  phase: TEST }
+  transform_param { mean_value: 115.269  mean_value: 122.346  mean_value: 122.819 }
+  image_data_param {  source: "/disk2/yangle/dataset/triDataset/valList.tri"  
+    batch_size: 4
+    root_folder: "/disk2/yangle/dataset/triDataset/augValImg/" } }
+layer { name:"labelSilence"  type:"Silence"  bottom:"labelImage"  include { phase: TEST } }
+
+layer {  name: "mask"  type: "TripletImageData"  top: "mask"  top:"labelMask"  include {  phase: TEST }
+  transform_param { scale: 0.00392156862745098 }
+  image_data_param {  source: "/disk2/yangle/dataset/triDataset/valList.tri"
+    is_color:0   batch_size: 4
+    root_folder: "/disk2/yangle/dataset/triDataset/augValMask/" } }
+
+# mask data shrink
+layer { name: "mask_56" type: "Interp" bottom: "mask" top: "mask_56"
+  interp_param { shrink_factor: 4 pad_beg: 0 pad_end: 0 is_seglabel: true } }
+layer { name: "mask_112" type: "Interp" bottom: "mask" top: "mask_112"
+  interp_param { shrink_factor: 2 pad_beg: 0 pad_end: 0 is_seglabel: true } }
+
+#conv1_1
+layer {
+  bottom: "img"  top: "conv1_1"  name: "conv1_1" type: "Convolution"
+  param { lr_mult: 0.1  decay_mult: 1  }
+  param { lr_mult: 0.2  decay_mult: 0  }
+  convolution_param { num_output: 64  pad: 1  kernel_size: 3 }  }
+layer { bottom: "conv1_1"  top: "conv1_1"  name: "relu1_1"  type: "ReLU" }
+
+#conv1_2
+layer {
+  bottom: "conv1_1"  top: "conv1_2"  name: "conv1_2"  type: "Convolution"
+  param { lr_mult: 0.1  decay_mult: 1 }
+  param { lr_mult: 0.2  decay_mult: 0 }
+  convolution_param { num_output: 64  pad: 1  kernel_size: 3 }  }
+layer {   bottom: "conv1_2"  top: "conv1_2"  name: "relu1_2"  type: "ReLU" }
+
+#pool1
+layer {
+  bottom: "conv1_2"  top: "pool1"  name: "pool1"  type: "Pooling"
+  pooling_param { pool: MAX  kernel_size: 2  stride: 2 } }
+  
+#conv2_1
+layer { bottom: "pool1"  top: "conv2_1"  name: "conv2_1"  type: "Convolution"
+  param { lr_mult: 0.1  decay_mult: 1 }
+  param { lr_mult: 0.2  decay_mult: 0 }
+  convolution_param { num_output: 128  pad: 1  kernel_size: 3  } }
+layer {  bottom: "conv2_1"  top: "conv2_1"  name: "relu2_1"  type: "ReLU" }
+
+#conv2_2
+layer { bottom: "conv2_1"  top: "conv2_2"  name: "conv2_2"  type: "Convolution"
+  param { lr_mult: 0.1  decay_mult: 1 }
+  param { lr_mult: 0.2  decay_mult: 0 }
+  convolution_param { num_output: 128  pad: 1  kernel_size: 3 } }
+layer {  bottom: "conv2_2"  top: "conv2_2"  name: "relu2_2"  type: "ReLU" }
+
+#pool2
+layer { bottom: "conv2_2"  top: "pool2"  name: "pool2"  type: "Pooling"
+  pooling_param { pool: MAX  kernel_size: 2  stride: 2 } }
+
+#conv3_1
+layer {  bottom: "pool2"  top: "conv3_1"  name: "conv3_1"  type: "Convolution"
+  param { lr_mult: 0.1  decay_mult: 1 }
+  param { lr_mult: 0.2  decay_mult: 0 }
+  convolution_param { num_output: 256  pad: 1  kernel_size: 3 } }
+layer {  bottom: "conv3_1"  top: "conv3_1"  name: "relu3_1"  type: "ReLU" }
+
+# conv3_2
+layer { bottom: "conv3_1"  top: "conv3_2"  name: "conv3_2"  type: "Convolution"
+  param { lr_mult: 0.1  decay_mult: 1  }
+  param { lr_mult: 0.2  decay_mult: 0  }
+  convolution_param {  num_output: 256  pad: 1   kernel_size: 3  } }
+layer {  bottom: "conv3_2"  top: "conv3_2"  name: "relu3_2"  type: "ReLU" }
+
+#conv3_3
+layer {  bottom: "conv3_2"  top: "conv3_3"  name: "conv3_3"  type: "Convolution"
+  param { lr_mult: 0.1  decay_mult: 1  }
+  param { lr_mult: 0.2  decay_mult: 0  }
+  convolution_param { num_output: 256  pad: 1   kernel_size: 3  } }
+layer { bottom: "conv3_3"  top: "conv3_3"  name: "relu3_3"  type: "ReLU" }
+
+#pool3
+#layer {  bottom: "conv3_3"  top: "pool3"  name: "pool3"  type: "Pooling"
+#  pooling_param { pool: MAX  kernel_size: 2  stride: 2 } }
+
+#conv4_1
+layer { bottom: "conv3_3"  top: "conv4_1"  name: "conv4_1"  type: "Convolution"
+  param { lr_mult: 0.1  decay_mult: 1 }
+  param { lr_mult: 0.2  decay_mult: 0 }
+  convolution_param {  num_output: 512  pad: 2  kernel_size: 3  dilation: 2} }
+layer {  bottom: "conv4_1"  top: "conv4_1"  name: "relu4_1"  type: "ReLU" }
+
+#conv4_2
+layer {  bottom: "conv4_1"  top: "conv4_2"  name: "conv4_2"  type: "Convolution"
+  param {  lr_mult: 0.1   decay_mult: 1 }
+  param {  lr_mult: 0.2   decay_mult: 0 }
+  convolution_param {  num_output: 512  pad: 2  kernel_size: 3  dilation: 2} }
+layer {  bottom: "conv4_2"  top: "conv4_2"  name: "relu4_2"  type: "ReLU" }
+
+#conv4_3
+layer {  bottom: "conv4_2"  top: "conv4_3"  name: "conv4_3"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 1 }
+  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param {  num_output: 512   pad: 2   kernel_size: 3  dilation: 2} }
+layer {  bottom: "conv4_3"  top: "conv4_3"  name: "relu4_3"  type: "ReLU" }
+
+#pool4
+#layer {  bottom: "conv4_3"  top: "pool4"  name: "pool4"  type: "Pooling"
+#  pooling_param {  pool: MAX  kernel_size: 2   stride: 2  } }
+  
+#conv5_1
+layer {  bottom: "conv4_3"  top: "conv5_1"  name: "conv5_1"  type: "Convolution"
+  param {  lr_mult: 0.1   decay_mult: 1 }
+  param {  lr_mult: 0.2   decay_mult: 0 }
+  convolution_param {  num_output: 512   pad: 4   kernel_size: 3  dilation: 4} }
+layer {  bottom: "conv5_1"  top: "conv5_1"  name: "relu5_1"  type: "ReLU" }
+
+#conv5_2
+layer {  bottom: "conv5_1"  top: "conv5_2"  name: "conv5_2"  type: "Convolution"
+  param {  lr_mult: 0.1   decay_mult: 1 }
+  param {  lr_mult: 0.2  decay_mult: 0  }
+  convolution_param {  num_output: 512  pad: 4   kernel_size: 3  dilation: 4} }
+layer {  bottom: "conv5_2"  top: "conv5_2"  name: "relu5_2"  type: "ReLU" }
+
+#conv5_3
+layer {  bottom: "conv5_2"  top: "conv5_3"  name: "conv5_3"  type: "Convolution"
+  param {  lr_mult: 0.1   decay_mult: 1 }
+  param {  lr_mult: 0.2   decay_mult: 0 }
+  convolution_param {  num_output: 512  pad: 4  kernel_size: 3  dilation: 4} }
+layer {  bottom: "conv5_3"  top: "conv5_3"  name: "relu5_3"  type: "ReLU" }
+
+# top_cov
+layer {  bottom: "conv5_3"  top: "top_cov"  name: "top_cov"  type: "Convolution"
+    param {  lr_mult: 0.1  decay_mult: 0.1 }
+    param {  lr_mult: 0.2  decay_mult: 0 }
+    convolution_param {  num_output: 128  kernel_size: 3  pad: 1
+	weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "top_cov"  top: "top_cov"  name: "relu_top_cov"  type: "ReLU" }
+
+# loss_tri_CovDec_5
+# cov_deconv_5_1
+layer {  bottom: "top_cov"  top: "cov_deconv_5_1"  name: "cov_deconv_5_1"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 0.1 }  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param {  num_output: 16  pad: 1   kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "cov_deconv_5_1"  top: "cov_deconv_5_1"  name: "relu_cov_deconv_5_1"  type: "ReLU" }
+# tri_CovDec_5_2
+layer {  bottom: "cov_deconv_5_1"  top: "tri_CovDec_5_2"  name: "tri_CovDec_5_2"  type: "Convolution"
+  param {  lr_mult: 1  decay_mult: 1 }  param {  lr_mult: 2  decay_mult: 0 }
+  convolution_param {  num_output: 2  pad: 1   kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+# loss_tri_CovDec_5
+layer { name: "loss_tri_CovDec_5" type: "SoftmaxWithLoss" 
+  bottom: "tri_CovDec_5_2"  bottom: "mask_56"  top: "loss_tri_CovDec_5"  loss_param {normalization: VALID } }
+
+# triplet loss 
+# slice tri_CovDec_5_2 into foreMap_5 and backMap_5
+layer {  name: "sli_cov_deconv_5_2"  type: "Slice"
+  bottom: "tri_CovDec_5_2"  top: "foreMap_5"  top: "backMap_5"  slice_param { axis: 1 } }
+# attention foreground weight map
+layer { name:"resforeMap_5"  type:"Reshape"  bottom:"foreMap_5"  top:"resforeMap_5"
+  reshape_param{ shape{dim:0  dim:3136  dim:1  dim:1} } }
+layer { name:"sofforeMap_5"  type:"Softmax"  bottom:"resforeMap_5"  top:"sofforeMap_5" }
+layer { name:"attForeMap_5"  type:"Reshape"  bottom:"sofforeMap_5"  top:"attForeMap_5" 
+reshape_param{ shape{ dim:0  dim:1  dim:56  dim:56 } } }
+# attention background weight map
+layer { name:"resbackMap_5"  type:"Reshape"  bottom:"backMap_5"  top:"resbackMap_5"
+  reshape_param{ shape{dim:0  dim:3136  dim:1  dim:1} } }
+layer { name:"sofbackMap_5"  type:"Softmax"  bottom:"resbackMap_5"  top:"sofbackMap_5" }
+layer { name:"attBackMap_5"  type:"Reshape"  bottom:"sofbackMap_5"  top:"attBackMap_5" 
+reshape_param{ shape{ dim:0  dim:1  dim:56  dim:56 } } }
+# a vector describing the img
+layer {  name:"softAtt_5"  type:"LinearSum"
+  bottom:"conv5_3"  bottom:"attForeMap_5"  bottom:"attBackMap_5"  bottom:"labelMask"  top:"softAtt_5"
+  propagate_down: 1  propagate_down: 1  propagate_down: 1  propagate_down: 0  }
+# L2 norm
+layer { name: "normL2_5"  type: "L2Norm"  bottom: "softAtt_5"  top: "normL2_5" }
+# triplet loss
+layer {  name: "tripletLoss_5"  type: "NaiveTripletLoss"  bottom: "normL2_5"  top: "tripletLoss_5"
+  triplet_loss_param {  margin: 1  sim_type: "DotProductSimilarity" }  loss_weight:0.05 }
+
+
+# km_1_conv_5
+layer { bottom: "top_cov"  top: "km_1_conv_5"  name: "km_1_conv_5"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 0.1 }
+  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param {  num_output: 512  pad: 1  kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "km_1_conv_5"  top: "km_1_conv_5"  name: "relu_km_1_deconv_5"  type: "ReLU" }
+
+# km_2_conv_4
+layer {  bottom: "km_1_conv_5"  top: "km_2_conv_4"  name: "km_2_conv_4"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 0.1 }
+  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param {  num_output: 256  pad: 1  kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer { name: "bn_km_2_conv_4" bottom: "km_2_conv_4" top: "km_2_conv_4"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 } include { phase: TRAIN }
+  batch_norm_param { use_global_stats: false } }
+layer { name: "bn_km_2_conv_4" bottom: "km_2_conv_4" top: "km_2_conv_4"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 } include { phase: TEST }
+  batch_norm_param { use_global_stats: true } }
+layer {  bottom: "km_2_conv_4"  top: "km_2_conv_4"  name: "relu_km_2_conv_4"  type: "ReLU"}
+
+# ks_deconv_4
+# ks_1
+layer {  bottom: "conv4_3"  top: "ks_1_deconv_4"  name: "ks_1_deconv_4"  type: "Convolution"
+  param { lr_mult: 1  decay_mult: 1 }
+  param { lr_mult: 2  decay_mult: 0 }
+  convolution_param {  num_output: 256  pad: 1  kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "ks_1_deconv_4"  top: "ks_1_deconv_4"  name: "bn_ks_1_deconv_4"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 }  include { phase: TRAIN }
+  batch_norm_param { use_global_stats: false } }
+layer {  bottom: "ks_1_deconv_4"  top: "ks_1_deconv_4"  name: "bn_ks_1_deconv_4"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 }  include { phase: TEST }
+  batch_norm_param { use_global_stats: true } }
+layer {  bottom: "ks_1_deconv_4"  top: "ks_1_deconv_4"  name: "relu_ks_1_deconv_4"  type: "ReLU" }
+
+# concatenate two feature map
+layer {  name: "concat4"  bottom: "ks_1_deconv_4"  bottom: "km_2_conv_4"  top: "concat4"  type: "Concat"
+  concat_param {  concat_dim: 1 } }
+
+# convolution
+layer {  bottom: "concat4"  top: "cov_deconv_4"  name: "cov_deconv_4"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 0.1 }
+  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param {  num_output: 256  pad: 1   kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "cov_deconv_4"  top: "cov_deconv_4"  name: "relu_cov_deconv_4"  type: "ReLU" }
+
+# loss_tri_CovDec_4
+# cov_deconv_4_1
+layer {  bottom: "cov_deconv_4"  top: "cov_deconv_4_1"  name: "cov_deconv_4_1"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 0.1 }  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param {  num_output: 16  pad: 1   kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "cov_deconv_4_1"  top: "cov_deconv_4_1"  name: "relu_cov_deconv_4_1"  type: "ReLU" }
+# tri_CovDec_4_2
+layer {  bottom: "cov_deconv_4_1"  top: "tri_CovDec_4_2"  name: "tri_CovDec_4_2"  type: "Convolution"
+  param {  lr_mult: 1  decay_mult: 1 }  param {  lr_mult: 2  decay_mult: 0 }
+  convolution_param {  num_output: 2  pad: 1   kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+# loss_tri_CovDec_4
+layer {  name: "loss_tri_CovDec_4"  type: "SoftmaxWithLoss"
+  bottom: "tri_CovDec_4_2"  bottom: "mask_56"  top: "loss_tri_CovDec_4"  loss_param {normalization: VALID } }
+
+# triplet loss 
+# slice tri_CovDec_4_2 into foreMap_4 and backMap_4
+layer {  name: "sli_cov_deconv_4_2"  type: "Slice"
+  bottom: "tri_CovDec_4_2"  top: "foreMap_4"  top: "backMap_4"  slice_param { axis: 1 } }
+# attention foreground weight map
+layer { name:"resforeMap_4"  type:"Reshape"  bottom:"foreMap_4"  top:"resforeMap_4"
+  reshape_param{ shape{dim:0  dim:3136  dim:1  dim:1} } }
+layer { name:"sofforeMap_4"  type:"Softmax"  bottom:"resforeMap_4"  top:"sofforeMap_4" }
+layer { name:"attForeMap_4"  type:"Reshape"  bottom:"sofforeMap_4"  top:"attForeMap_4" 
+reshape_param{ shape{ dim:0  dim:1  dim:56  dim:56 } } }
+# attention background weight map
+layer { name:"resbackMap_4"  type:"Reshape"  bottom:"backMap_4"  top:"resbackMap_4"
+  reshape_param{ shape{dim:0  dim:3136  dim:1  dim:1} } }
+layer { name:"sofbackMap_4"  type:"Softmax"  bottom:"resbackMap_4"  top:"sofbackMap_4" }
+layer { name:"attBackMap_4"  type:"Reshape"  bottom:"sofbackMap_4"  top:"attBackMap_4" 
+reshape_param{ shape{ dim:0  dim:1  dim:56  dim:56 } } }
+# a vector describing the img
+layer {  name:"softAtt_4"  type:"LinearSum"
+  bottom:"conv4_3"  bottom:"attForeMap_4"  bottom:"attBackMap_4"  bottom:"labelMask"  top:"softAtt_4"
+  propagate_down: 1  propagate_down: 1  propagate_down: 1  propagate_down: 0  }
+# L2 norm
+layer { name: "normL2_4"  type: "L2Norm"  bottom: "softAtt_4"  top: "normL2_4" }
+# triplet loss
+layer {  name: "tripletLoss_4"  type: "NaiveTripletLoss"  bottom: "normL2_4"  top: "tripletLoss_4"
+  triplet_loss_param {  margin: 1  sim_type: "DotProductSimilarity" }  loss_weight:0.05 }
+    
+# km_2_conv_3
+layer {  bottom: "cov_deconv_4"  top: "km_2_conv_3"  name: "km_2_conv_3"  type: "Convolution"
+  param { lr_mult: 1  decay_mult: 1  }
+  param { lr_mult: 2  decay_mult: 0  }
+  convolution_param {  num_output: 128   pad: 1   kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "km_2_conv_3"  top: "km_2_conv_3"  name: "bn_km_2_conv_3"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 }  include { phase: TRAIN }
+  batch_norm_param { use_global_stats: false } }
+layer {  bottom: "km_2_conv_3"  top: "km_2_conv_3"  name: "bn_km_2_conv_3"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 }  include { phase: TEST }
+  batch_norm_param { use_global_stats: true } }
+layer {  bottom: "km_2_conv_3"  top: "km_2_conv_3"  name: "relu_km_2_conv_3"  type: "ReLU" }
+
+# ks_deconv_3
+# ks_1
+layer {  bottom: "conv3_3"  top: "ks_1_deconv_3"  name: "ks_1_deconv_3"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 0.1 }
+  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param {  num_output: 128  pad: 1  kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "ks_1_deconv_3"  top: "ks_1_deconv_3"  name: "bn_ks_1_deconv_3"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 }  include{ phase: TRAIN }
+  batch_norm_param { use_global_stats: false } }
+layer {  bottom: "ks_1_deconv_3"  top: "ks_1_deconv_3"  name: "bn_ks_1_deconv_3"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 }  include{ phase: TEST }
+  batch_norm_param { use_global_stats: true } }
+layer {  bottom: "ks_1_deconv_3"  top: "ks_1_deconv_3"   name: "relu_ks_1_deconv_3"  type: "ReLU" }
+# concatenate two feature map
+layer {  name: "concat3"  bottom: "ks_1_deconv_3"  bottom: "km_2_conv_3"  top: "concat3"  type: "Concat"
+  concat_param {  concat_dim: 1 }
+}
+
+# convolution
+layer {  bottom: "concat3"  top: "cov_deconv_3"  name: "cov_deconv_3"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 0.1 }
+  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param {  num_output: 128   pad: 1   kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "cov_deconv_3"  top: "cov_deconv_3"  name: "relu_cov_deconv_3"  type: "ReLU" }
+
+# loss_tri_CovDec_3
+# cov_deconv_3_1
+layer {  bottom: "cov_deconv_3"  top: "cov_deconv_3_1"  name: "cov_deconv_3_1"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 0.1 }  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param {  num_output: 16  pad: 1   kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "cov_deconv_3_1"  top: "cov_deconv_3_1"  name: "relu_cov_deconv_3_1"  type: "ReLU" }
+# tri_CovDec_3_2
+layer {  bottom: "cov_deconv_3_1"  top: "tri_CovDec_3_2"  name: "tri_CovDec_3_2"  type: "Convolution"
+  param {  lr_mult: 1  decay_mult: 1 }  param {  lr_mult: 2  decay_mult: 0 }
+  convolution_param {  num_output: 2  pad: 1   kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+# loss_tri_CovDec_3
+layer {  name: "loss_tri_CovDec_3"  type: "SoftmaxWithLoss"
+  bottom: "tri_CovDec_3_2"  bottom: "mask_56"  top: "loss_tri_CovDec_3"  loss_param {normalization: VALID } }
+
+# triplet loss 
+# slice tri_CovDec_3_2 into foreMap_3 and backMap_3
+layer {  name: "sli_cov_deconv_3_2"  type: "Slice"
+  bottom: "tri_CovDec_3_2"  top: "foreMap_3"  top: "backMap_3"  slice_param { axis: 1 } }
+# attention foreground weight map
+layer { name:"resforeMap_3"  type:"Reshape"  bottom:"foreMap_3"  top:"resforeMap_3"
+  reshape_param{ shape{dim:0  dim:3136  dim:1  dim:1} } }
+layer { name:"sofforeMap_3"  type:"Softmax"  bottom:"resforeMap_3"  top:"sofforeMap_3" }
+layer { name:"attForeMap_3"  type:"Reshape"  bottom:"sofforeMap_3"  top:"attForeMap_3" 
+reshape_param{ shape{ dim:0  dim:1  dim:56  dim:56 } } }
+# attention background weight map
+layer { name:"resbackMap_3"  type:"Reshape"  bottom:"backMap_3"  top:"resbackMap_3"
+  reshape_param{ shape{dim:0  dim:3136  dim:1  dim:1} } }
+layer { name:"sofbackMap_3"  type:"Softmax"  bottom:"resbackMap_3"  top:"sofbackMap_3" }
+layer { name:"attBackMap_3"  type:"Reshape"  bottom:"sofbackMap_3"  top:"attBackMap_3" 
+reshape_param{ shape{ dim:0  dim:1  dim:56  dim:56 } } }
+# a vector describing the img
+layer {  name:"softAtt_3"  type:"LinearSum"
+  bottom:"conv3_3"  bottom:"attForeMap_3"  bottom:"attBackMap_3"  bottom:"labelMask"  top:"softAtt_3"
+  propagate_down: 1  propagate_down: 1  propagate_down: 1  propagate_down: 0  }
+# L2 norm
+layer { name: "normL2_3"  type: "L2Norm"  bottom: "softAtt_3"  top: "normL2_3" }
+# triplet loss
+layer {  name: "tripletLoss_3"  type: "NaiveTripletLoss"  bottom: "normL2_3"  top: "tripletLoss_3"
+  triplet_loss_param {  margin: 1  sim_type: "DotProductSimilarity" }  loss_weight:0.05 }
+  
+# deconv_2
+# km_1_deconv_2
+layer {  bottom: "cov_deconv_3"  top: "km_1_deconv_2"  name: "km_1_deconv_2"  type: "Deconvolution"
+  param {  lr_mult: 0.01  decay_mult: 0.01 }
+  convolution_param {  num_output: 128  group: 128  kernel_size: 4  stride: 2  pad: 1
+    weight_filler {  type: "bilinear" }
+	bias_term: false } }
+# km_2_conv_2
+layer {  bottom: "km_1_deconv_2"  top: "km_2_conv_2"  name: "km_2_conv_2"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 0.1 }
+  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param {  num_output: 64  pad: 1  kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "km_2_conv_2"  top: "km_2_conv_2"  name: "bn_km_2_conv_2"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 }  include{ phase: TRAIN }
+  batch_norm_param { use_global_stats: false } }
+layer {  bottom: "km_2_conv_2"  top: "km_2_conv_2"  name: "bn_km_2_conv_2"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 }  include{ phase: TEST }
+  batch_norm_param { use_global_stats: true } }
+layer {  bottom: "km_2_conv_2"  top: "km_2_conv_2"  name: "relu_km_2_conv_2"  type: "ReLU" }
+
+# ks_deconv_2
+# ks_1
+layer {  bottom: "conv2_2"  top: "ks_1_deconv_2"  name: "ks_1_deconv_2"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 0.1 }
+  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param { num_output: 64  pad: 1  kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "ks_1_deconv_2"  top: "ks_1_deconv_2"  name: "bn_ks_1_deconv_2"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 }  include{ phase: TRAIN }
+  batch_norm_param { use_global_stats: false } }
+layer {  bottom: "ks_1_deconv_2"  top: "ks_1_deconv_2"  name: "bn_ks_1_deconv_2"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 }  include{ phase: TEST }
+  batch_norm_param { use_global_stats: true } }
+layer {  bottom: "ks_1_deconv_2"  top: "ks_1_deconv_2"  name: "relu_ks_1_deconv_2"  type: "ReLU" }
+# concatenate two feature map
+layer {  name: "concat2"  bottom: "ks_1_deconv_2"  bottom: "km_2_conv_2"  top: "concat2"  type: "Concat"
+  concat_param {   concat_dim: 1 }
+}
+# convolution
+layer {  bottom: "concat2"  top: "cov_deconv_2"  name: "cov_deconv_2"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 0.1 }
+  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param {  num_output: 64  pad: 1  kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "cov_deconv_2"  top: "cov_deconv_2"  name: "relu_cov_deconv_2"  type: "ReLU" }
+
+# loss_tri_CovDec_2
+# cov_deconv_2_1
+layer {  bottom: "cov_deconv_2"  top: "cov_deconv_2_1"  name: "cov_deconv_2_1"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 0.1 }  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param {  num_output: 8  pad: 1   kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "cov_deconv_2_1"  top: "cov_deconv_2_1"  name: "relu_cov_deconv_2_1"  type: "ReLU" }
+# tri_CovDec_2_2
+layer {  bottom: "cov_deconv_2_1"  top: "tri_CovDec_2_2"  name: "tri_CovDec_2_2"  type: "Convolution"
+  param {  lr_mult: 1  decay_mult: 1 }  param {  lr_mult: 2  decay_mult: 0 }
+  convolution_param {  num_output: 2  pad: 1   kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+# loss_tri_CovDec_2
+layer {  name: "loss_tri_CovDec_2"  type: "SoftmaxWithLoss"
+  bottom: "tri_CovDec_2_2"  bottom: "mask_112"  top: "loss_tri_CovDec_2"  loss_param {normalization: VALID } }
+
+# triplet loss 
+# slice tri_CovDec_2_2 into foreMap_2 and backMap_2
+layer {  name: "sli_cov_deconv_2_2"  type: "Slice"
+  bottom: "tri_CovDec_2_2"  top: "foreMap_2"  top: "backMap_2"  slice_param { axis: 1 } }
+# attention foreground weight map
+layer { name:"resforeMap_2"  type:"Reshape"  bottom:"foreMap_2"  top:"resforeMap_2"
+  reshape_param{ shape{dim:0  dim:12544  dim:1  dim:1} } }
+layer { name:"sofforeMap_2"  type:"Softmax"  bottom:"resforeMap_2"  top:"sofforeMap_2" }
+layer { name:"attForeMap_2"  type:"Reshape"  bottom:"sofforeMap_2"  top:"attForeMap_2" 
+reshape_param{ shape{ dim:0  dim:1  dim:112  dim:112 } } }
+# attention background weight map
+layer { name:"resbackMap_2"  type:"Reshape"  bottom:"backMap_2"  top:"resbackMap_2"
+  reshape_param{ shape{dim:0  dim:12544  dim:1  dim:1} } }
+layer { name:"sofbackMap_2"  type:"Softmax"  bottom:"resbackMap_2"  top:"sofbackMap_2" }
+layer { name:"attBackMap_2"  type:"Reshape"  bottom:"sofbackMap_2"  top:"attBackMap_2" 
+reshape_param{ shape{ dim:0  dim:1  dim:112  dim:112 } } }
+# a vector describing the img
+layer {  name:"softAtt_2"  type:"LinearSum"
+  bottom:"conv2_2"  bottom:"attForeMap_2"  bottom:"attBackMap_2"  bottom:"labelMask"  top:"softAtt_2"
+  propagate_down: 1  propagate_down: 1  propagate_down: 1  propagate_down: 0  }
+# L2 norm
+layer { name: "normL2_2"  type: "L2Norm"  bottom: "softAtt_2"  top: "normL2_2" }
+# triplet loss
+layer {  name: "tripletLoss_2"  type: "NaiveTripletLoss"  bottom: "normL2_2"  top: "tripletLoss_2"
+  triplet_loss_param {  margin: 1  sim_type: "DotProductSimilarity" }  loss_weight:0.05 }  
+
+# deconv_1
+# km_1_deconv_2
+layer {  bottom: "cov_deconv_2"  top: "km_1_deconv_1"  name: "km_1_deconv_1"  type: "Deconvolution"
+  param {  lr_mult: 0.01  decay_mult: 0.01 }
+  convolution_param {  num_output: 64  group: 64	kernel_size: 4	stride: 2  pad: 1
+    weight_filler {  type: "bilinear" }
+	bias_term: false } }
+
+# km_1_conv_1
+layer {  bottom: "km_1_deconv_1"  top: "km_1_conv_1"  name: "km_1_conv_1"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 0.1 }
+  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param {  num_output: 32  pad: 1  kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "km_1_conv_1"  top: "km_1_conv_1"  name: "bn_km_1_conv_1"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 }  include{ phase: TRAIN }
+  batch_norm_param { use_global_stats: false } }
+layer {  bottom: "km_1_conv_1"  top: "km_1_conv_1"  name: "bn_km_1_conv_1"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 }  include{ phase: TEST }
+  batch_norm_param { use_global_stats: true } }
+layer {  bottom: "km_1_conv_1"  top: "km_1_conv_1"  name: "relu_km_1_conv_1"  type: "ReLU" }
+
+# ks_deconv_1
+# ks_1
+layer {  bottom: "conv1_2"  top: "ks_1_deconv_1"  name: "ks_1_deconv_1"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 0.1 }
+  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param { num_output: 32  pad: 1  kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "ks_1_deconv_1"  top: "ks_1_deconv_1"  name: "bn_ks_1_deconv_1"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 }  include{ phase: TRAIN }
+  batch_norm_param { use_global_stats: false } }
+layer {  bottom: "ks_1_deconv_1"  top: "ks_1_deconv_1"  name: "bn_ks_1_deconv_1"  type: "BatchNorm"
+  param { lr_mult: 0 }  param { lr_mult: 0 }  param { lr_mult: 0 }  include{ phase: TEST }
+  batch_norm_param { use_global_stats: true } }
+layer {  bottom: "ks_1_deconv_1"  top: "ks_1_deconv_1"  name: "relu_ks_1_deconv_1"  type: "ReLU" }
+# concatenate two feature map
+layer {  name: "concat1"  bottom: "ks_1_deconv_1"  bottom: "km_1_conv_1"  top: "concat1"  type: "Concat"
+  concat_param {   concat_dim: 1 }
+}
+
+# loss_tri_CovDec_1
+layer {  bottom: "concat1"  top: "segfuse"  name: "segfuse"  type: "Convolution"
+  param {  lr_mult: 0.1  decay_mult: 0.1 }
+  param {  lr_mult: 0.2  decay_mult: 0 }
+  convolution_param {  num_output: 8  pad: 1  kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+layer {  bottom: "segfuse"  top: "segfuse"  name: "relu_segfuse"  type: "ReLU" }
+# tri_CovDec_1_2
+layer {  bottom: "segfuse"  top: "tri_CovDec_1_2"  name: "tri_CovDec_1_2"  type: "Convolution"
+  param {  lr_mult: 1  decay_mult: 1 }  param {  lr_mult: 2  decay_mult: 0 }
+  convolution_param {  num_output: 2  pad: 1   kernel_size: 3
+  weight_filler { type: "gaussian"  std: 0.01 }  bias_filler { type: "constant" } } }
+# loss_tri_CovDec_1
+layer {  name: "loss_tri_CovDec_1"  type: "SoftmaxWithLoss"
+  bottom: "tri_CovDec_1_2"  bottom: "mask"  top: "loss_tri_CovDec_1"  loss_param {normalization: VALID } }
+
+# triplet loss 
+# slice tri_CovDec_1_2 into foreMap_1 and backMap_1
+layer {  name: "sli_cov_deconv_1_2"  type: "Slice"
+  bottom: "tri_CovDec_1_2"  top: "foreMap_1"  top: "backMap_1"  slice_param { axis: 1 } }
+# attention foreground weight map
+layer { name:"resforeMap_1"  type:"Reshape"  bottom:"foreMap_1"  top:"resforeMap_1"
+  reshape_param{ shape{dim:0  dim:50176  dim:1  dim:1} } }
+layer { name:"sofforeMap_1"  type:"Softmax"  bottom:"resforeMap_1"  top:"sofforeMap_1" }
+layer { name:"attForeMap_1"  type:"Reshape"  bottom:"sofforeMap_1"  top:"attForeMap_1" 
+reshape_param{ shape{ dim:0  dim:1  dim:224  dim:224 } } }
+# attention background weight map
+layer { name:"resbackMap_1"  type:"Reshape"  bottom:"backMap_1"  top:"resbackMap_1"
+  reshape_param{ shape{dim:0  dim:50176  dim:1  dim:1} } }
+layer { name:"sofbackMap_1"  type:"Softmax"  bottom:"resbackMap_1"  top:"sofbackMap_1" }
+layer { name:"attBackMap_1"  type:"Reshape"  bottom:"sofbackMap_1"  top:"attBackMap_1" 
+reshape_param{ shape{ dim:0  dim:1  dim:224  dim:224 } } }
+# a vector describing the img
+layer {  name:"softAtt_1"  type:"LinearSum"
+  bottom:"conv1_2"  bottom:"attForeMap_1"  bottom:"attBackMap_1"  bottom:"labelMask"  top:"softAtt_1"
+  propagate_down: 1  propagate_down: 1  propagate_down: 1  propagate_down: 0  }
+# L2 norm
+layer { name: "normL2_1"  type: "L2Norm"  bottom: "softAtt_1"  top: "normL2_1" }
+# triplet loss
+layer {  name: "tripletLoss_1"  type: "NaiveTripletLoss"  bottom: "normL2_1"  top: "tripletLoss_1"
+  triplet_loss_param {  margin: 1  sim_type: "DotProductSimilarity" }  loss_weight:0.05 }
+  

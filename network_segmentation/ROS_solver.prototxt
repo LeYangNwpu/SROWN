@@ -1,0 +1,14 @@
+net: "./ROS_train_val.prototxt"
+test_iter: 340
+test_interval: 3115
+base_lr: 0.003
+lr_policy: "step"
+gamma: 0.6
+stepsize:6230
+display: 31
+max_iter: 31150
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 3115
+snapshot_prefix: "/disk2/yangle/result/finetune/lmdb"
+solver_mode: GPU
